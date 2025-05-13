@@ -1,4 +1,4 @@
-t,h. Lagt til første par ( 0,0 ) for at tid og pos skal starte på 0
+tid, høyde. Lagt til første par ( 0,0 ) for at tid og pos skal starte på 0
 0,0
 3.333333E-2,5.816568E-3
 6.666667E-2,1.744970E-2

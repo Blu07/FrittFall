@@ -6,7 +6,6 @@ import os
 from objects import FallingObject, Ball
 
 
-
 def simulate(obj: FallingObject, start, end, resolution):
     time, dt = np.linspace(start, end, resolution, retstep=True)
     s = np.empty(resolution)
@@ -80,26 +79,6 @@ s_air = s_air[subset_indices]
 v_air = v_air[subset_indices]
 a_air = a_air[subset_indices]
 
-coeffList = []
-
-g=-9.81
-A=np.pi * radius**2
-aD=airDensity
-
-for i in range(len(s_emp)):
-    a = a_emp[i]
-    v = v_emp[i]
-    time = t[i]
-    
-    Cd = 2*m * ( g - a )/( aD * A * v**2 )
-    if Cd < 0.5 and Cd > -2 and time > 0.4:
-        coeffList.append(Cd)
-    else:
-        coeffList.append(np.nan)
-        
-print(np.nanmean(coeffList))
-print(np.nanmedian(coeffList))
-
 
 
 #%% Plot posisjon
@@ -107,8 +86,6 @@ plt.figure(1, figsize=(12, 9))
 plt.plot(t, s_cal, label="Fritt Fall")
 plt.plot(t, s_air, label="Luftmotstand")
 plt.plot(t, s_emp, label="Empiriske Verdier")
-plt.plot(t, coeffList, label="Air Coeff")
-# plt.axhline(-0.42, color="black", linestyle="--", label="Referanse")
 plt.title("Posisjon [m]")
 plt.xlabel("Tid [s]")
 plt.ylabel("Posisjon [m]")

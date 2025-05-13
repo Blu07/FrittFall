@@ -25,8 +25,8 @@ class FallingObject:
         self.vel = v
         self.pos = self.pos + v * dt
         
-        dragForce = 1/2 * self.airDensity * self.dragCoeff * self.area * v**2
-        self.acc = self.G + ( dragForce / self.mass )
+        dragForce = 1/2 * self.airDensity * self.dragCoeff * self.area * abs(v)*v # v^2, but keep the sign of v
+        self.acc = self.G - ( dragForce / self.mass )
 
 
 
