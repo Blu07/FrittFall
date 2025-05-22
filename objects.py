@@ -3,7 +3,7 @@ import numpy as np
 
 class FallingObject:
     
-    G = -9.81  # [m/s^2]
+    g = -9.81  # [m/s^2]
     
     def __init__(self, mass, area, dragCoeff, airDensity, pos, vel, acc):
         self.mass = mass
@@ -26,7 +26,7 @@ class FallingObject:
         self.pos = self.pos + v * dt
         
         dragForce = 1/2 * self.airDensity * self.dragCoeff * self.area * abs(v)*v # v^2, but keep the sign of v
-        self.acc = self.G - ( dragForce / self.mass )
+        self.acc = self.g - ( dragForce / self.mass )
 
 
 
@@ -40,10 +40,8 @@ class Ball(FallingObject):
 
 class Cube(FallingObject):
     
-    dragCoeff = 1.05  # Face down 
-    
-    def __init__(self, radius, mass, airDensity, pos, vel, acc):
-        super().__init__(mass, np.pi*radius**2, self.dragCoeff, airDensity, pos, vel, acc)
+    def __init__(self, sideLen, mass, dragCoeff, airDensity, pos, vel, acc):
+        super().__init__(mass, sideLen**2, dragCoeff, airDensity, pos, vel, acc)
         
-        self.radius = radius
+        self.sideLen = sideLen
         

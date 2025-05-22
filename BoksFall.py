@@ -3,8 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-from objects import FallingObject, Ball
-
+from objects import FallingObject, Ball, Cube
 
 
 def simulate(obj: FallingObject, start, end, resolution):
@@ -23,15 +22,14 @@ def simulate(obj: FallingObject, start, end, resolution):
 g = -9.81         # [m/s^2]
 v0 = 0            # [m/s]
 s0 = 0            # [m]
-m = 0.00244       # [kg]
-radius = 0.02     # [m]
+m = 1.000          # [kg]
 airDensity = 1.29 # [kg/m^3]
 
 # Lag objekt
-ball = Ball(
-    radius=radius,
-    mass=m,
-    dragCoeff=0.5,
+ball = FallingObject(
+    area=12.5e-2 * 19.5e-2,
+    mass=0.2,
+    dragCoeff=0.58,
     airDensity=airDensity,
     pos=s0,
     vel=v0,
@@ -41,7 +39,8 @@ ball = Ball(
 simRes = 100000
 
 #%% Last inn empiriske data
-dataFileName = os.path.join("data", "BallFall2.csv")
+dataFileName = os.path.join("data", "BoksFall.csv")
+imageFolderPath = os.path.join("..", "bilder")
 
 t, s_emp = np.loadtxt(
     dataFileName,
@@ -69,7 +68,7 @@ a_cal = np.gradient(v_cal, t)
 
 
 #%% Beregn simulert fall med luftmotstand
-t_air, s_air = simulate(ball, t[0], len(t), simRes)
+t_air, s_air = simulate(ball, t[0], 1.2, simRes)
 v_air = np.gradient(s_air, t_air)
 a_air = np.gradient(v_air, t_air)
 
@@ -81,35 +80,11 @@ a_air = a_air[subset_indices]
 
 
 
-g=-9.81
-A=np.pi * radius**2
-aD=airDensity
-
-coeffList = 2*m * ( g - a_emp )/( aD * A * v_emp**2 )
-
-print(np.nanmean(coeffList))
-
-# for i in range(len(s_emp)):
-#     a = a_emp[i]
-#     v = v_emp[i]
-#     time = t[i]
-    
-#     Cd = 2*m * ( g - a )/( aD * A * v**2 )
-#     if Cd < 0.5 and Cd > -2 and time > 0.4:
-#         coeffList.append(Cd)
-#     else:
-#         coeffList.append(np.nan)
-
-
-
-
 #%% Plot posisjon
 plt.figure(1, figsize=(12, 9))
 plt.plot(t, s_cal, label="Fritt Fall")
 plt.plot(t, s_air, label="Luftmotstand")
 plt.plot(t, s_emp, label="Empiriske Verdier")
-# plt.plot(t, coeffList, label="Air Coeff")
-# plt.axhline(-0.42, color="black", linestyle="--", label="Referanse")
 plt.title("Posisjon [m]")
 plt.xlabel("Tid [s]")
 plt.ylabel("Posisjon [m]")

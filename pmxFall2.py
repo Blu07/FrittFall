@@ -40,22 +40,44 @@ ball = Ball(
 simRes = 100000
 
 #%% Last inn empiriske data
-dataFileName = "msd.csv"
+dataFileName = os.path.join("data", "fall2.csv")
 imageFolderPath = os.path.join("..", "bilder")
 
 a_emp, t_emp = np.loadtxt(
     dataFileName,
     delimiter="\t",
-    skiprows=0,
-    max_rows=100,
-    usecols=(5, 7),
+    skiprows=2,
+    max_rows=3000,
+    usecols=(5, 9),
     unpack=True
 )
 
+t_emp *= 10E-4  # Convert from microseconds to seconds
 
 
-t_emp *= 10E-4  # Convert from microsseconds to seconds
-a_emp = ((a_emp / -820)) * 9.81 - 9.81 # Normalize a_emp to m/s^2
+# Manual corrections
+
+
+# Find the value that microbit sends when standing still.
+a_still = a_emp[1:10] # Acceleration when still
+a_still_mean = np.nanmean(a_still)
+
+# Convert 
+a_emp = ((a_emp / a_still_mean)) * 9.81 - 9.81 #  a_emp to m/s^2
+
+# Plot raw acceleration data
+plt.figure("Raw akselerasjon", figsize=(12, 9))
+plt.plot(t_emp[0:len(a_still)], a_still, label="akselerasjon")
+plt.hlines(a_still_mean, t_emp[0], t_emp[len(a_still)-1], color="red", linestyle="--", label="null")
+plt.title("Rå akselerasjon [m/s²]")
+plt.xlabel("Tid [s]")
+plt.ylabel("Akselerasjon [m/s²]")
+plt.legend()
+plt.grid()
+plt.show()
+
+
+
 
 #%% Behandle empiriske data
 
@@ -72,10 +94,6 @@ for i in range(len(a_emp)):
     if t < t_min or t > t_max:
         a_emp[i] = np.nan
         
-        
-    # if az[i] > 200 or az[i] < -200:
-    #     az[i] = np.nan
-    #     a_calc[i] = np.nan
     
 
 # Integrate a_emp over t_emp to get v_emp
@@ -146,6 +164,9 @@ s_emp = integrate(v_emp, t_emp)
 # plt.legend()
 # plt.grid()
 # plt.show(block=False)
+
+
+
 
 #%% Plot hastighet
 plt.figure("Hastighet", figsize=(12, 9))

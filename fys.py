@@ -40,7 +40,7 @@ ball = Ball(
 simRes = 100000
 
 #%% Last inn empiriske data
-dataFileName = "BallFall.txt"
+dataFileName = os.path.join("data", "BallFall.csv")
 imageFolderPath = os.path.join("..", "bilder")
 
 t, s_emp = np.loadtxt(
@@ -69,7 +69,7 @@ a_cal = np.gradient(v_cal, t)
 
 
 #%% Beregn simulert fall med luftmotstand
-t_air, s_air = simulate(ball, t[0], 1.2, simRes)
+t_air, s_air = simulate(ball, t[0], t[-1], simRes)
 v_air = np.gradient(s_air, t_air)
 a_air = np.gradient(v_air, t_air)
 
