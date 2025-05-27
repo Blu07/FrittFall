@@ -73,6 +73,7 @@ t_air, s_air = simulate(ball, t[0], len(t), simRes)
 v_air = np.gradient(s_air, t_air)
 a_air = np.gradient(v_air, t_air)
 
+
 # Velg ut simulert data med samme oppløsning som empiriske data
 subset_indices = np.linspace(0, simRes-1, len(t), dtype=int)
 s_air = s_air[subset_indices]

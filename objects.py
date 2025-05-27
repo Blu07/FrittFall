@@ -28,7 +28,15 @@ class FallingObject:
         dragForce = 1/2 * self.airDensity * self.dragCoeff * self.area * abs(v)*v # v^2, but keep the sign of v
         self.acc = self.g - ( dragForce / self.mass )
 
-
+    def reset(self, pos=None, vel=None, acc=None):
+        """Reset the position, velocity and acceleration of the object.
+        """
+        if pos is not None:
+            self.pos = pos
+        if vel is not None:
+            self.vel = vel
+        if acc is not None:
+            self.acc = acc
 
 class Ball(FallingObject):
     
