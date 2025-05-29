@@ -1,0 +1,17 @@
+def on_button_pressed_a():
+    global read
+    read = 1
+input.on_button_pressed(Button.A, on_button_pressed_a)
+
+def on_button_pressed_b():
+    global read
+    read = 0
+input.on_button_pressed(Button.B, on_button_pressed_b)
+
+def on_received_value(name, value):
+    if read == 1:
+        serial.write_value(name, value)
+radio.on_received_value(on_received_value)
+
+read = 0
+radio.set_group(4)

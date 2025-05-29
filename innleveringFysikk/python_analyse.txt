@@ -9,19 +9,17 @@ from utils import integrate, simulate
 
 
 #%%
-# CONSTANTS AND SETTINGS
+# Fysiske konstanter og initialverdier
 g = -9.81         # [m/s^2]
-DPI = 600         # Dots per inch when saving figures
+airDensity = 1.25 # [kg/m^3]
 
-image_folder = "pmxFysFigures"
-os.makedirs(image_folder, exist_ok=True)
 
-# Create Box objects
+# Lag Boks objekt
 boks = FallingObject(
-    area=0.0244,
+    area=12.5e-2 * 19.5e-2,
     mass=0.21,
-    drag_coeff=1.05,
-    air_density=1.025,
+    dragCoeff=1.063,
+    airDensity=airDensity,
     pos=0,
     vel=0,
     acc=g
@@ -30,55 +28,52 @@ boks = FallingObject(
 størreBoks = Cube(
     sideLen=0.32,
     mass=0.21,
-    drag_coeff=1.05,
-    air_density=1.025,
+    dragCoeff=1.05,
+    airDensity=airDensity,
     pos=0,
     vel=0,
     acc=g
 )
 
-sim_res = 100000
+simRes = 100000
 
 
 
 
-#%% Empirical Position
+#%% Empirisk Posisjon
 t_tracked, s_tracked = np.loadtxt(
     "data/BoksFallTracked.csv",
     delimiter=",",
-    skiprows=7, # Skip the lines where the box is not yet falling
+    skiprows=7, # Hopp over de linjene hvor boksen ikke ennå faller
     usecols=(0, 1),
     unpack=True
 )
 
 
-# Process data
-s_tracked *= -1  # Reverse direction to downward
-s_tracked -= s_tracked[0]  # Reset position to zero
-t_tracked -= t_tracked[0]  # Reset time to zero
+#%% Behandle data
+s_tracked *= -1  # Snu retning til nedover
+s_tracked -= s_tracked[0]  # Nullstill posisjon
+t_tracked -= t_tracked[0]  # Nullstill tid
 
-# Total time for the fall
+# Total tid for fallet
 fall_duration = t_tracked[-1]
 fall_length = s_tracked[-1]
 
 print("Fallets varighet:", fall_duration, "s")
-print("Fallhøyde:", fall_length, "m")
+print("Fallets lengde:", fall_length, "m")
 
-# Derive position to get velocity and acceleration
+# Deriver posisjon for å få hastighet og akselerasjon
 v_tracked = np.gradient(s_tracked, t_tracked)
 a_tracked = np.gradient(v_tracked, t_tracked)
 
 
-# Print statistics for acceleration
+# Print statistikk for akselerasjonen
 print("Tracker gjennomsnittlig akselerasjon:", np.nanmean(a_tracked))
 print("Tracker standardavvik i akselerasjon:", np.nanstd(a_tracked))
 
 
 
-
-
-
-#%% Empirical Acceleration
+#%% Empirisk Akselerasjon
 a_measured, t_measured = np.loadtxt(
     "data/BoksFallMeasured.csv",
     delimiter="\t",
@@ -87,20 +82,20 @@ a_measured, t_measured = np.loadtxt(
     unpack=True
 )
 
-# The part of the data where the box is falling
+# Delen av data som boksen faller
 fall_start_index = 83
 fall_end_index = 96
 
 
 
-# Process time
-t_measured -= t_measured[0]  # Reset time relative (first measurement is 0)
+# Behandle tid
+t_measured -= t_measured[0]  # Nullstill tid relativt (første måling er 0)
 t_measured *= 0.001 # Convert from milliseconds to seconds
-t_measured -= t_measured[fall_start_index]  # Reset time to match the moment when the box is dropped.
+t_measured -= t_measured[fall_start_index]  # Nullstill tid for å matche idpunktet når boksen slippes.
 
 
 
-# Process acceleration
+# Behandle akselerasjon
 # Convert from micro:bit readings to m/s^2
 # Use the mean of the acceleration when the micro:bit stands still to find a = 0 m/s²
 # When a_measured = 0: a = -9.81 m/s²
@@ -124,13 +119,13 @@ a_measured[fall_start_index] = g
 
 
 
-# Integrate for velocity and position
+# Integrer for hastighet og posisjon
 
 # Cut the data to only include the fall
 t_measured = t_measured[fall_start_index:fall_end_index]
 a_measured = a_measured[fall_start_index:fall_end_index]
 
-# Integrate to get velocity and position
+# Integrer for å få hastighet og posisjon
 v_measured = integrate(a_measured, t_measured)
 s_measured = integrate(v_measured, t_measured)
 
@@ -139,8 +134,8 @@ s_measured = integrate(v_measured, t_measured)
 
 
 
-#%% Create model for free fall (without air resistance)
-t_free = np.linspace(0, fall_duration, sim_res)
+#%% Lag modell for fritt fall (uten luftmotstand)
+t_free = np.linspace(0, fall_duration, simRes)
 s_free = 1/2 * g * t_free**2
 v_free = g * t_free
 a_free = g * np.ones_like(t_free)
@@ -149,28 +144,28 @@ a_free = g * np.ones_like(t_free)
 
 
 
-#%% Simulate fall with air resistance
+#%% Simuler fall med luftmotstand
 
-# Simulate the box fall
-t_air_terminal = np.linspace(0, fall_duration, sim_res)
-t_air, s_air, v_air, a_air = simulate(boks, t_air_terminal, sim_res)
+# Simuler boksen fallet
+t_air_terminal = np.linspace(0, fall_duration, simRes)
+t_air, s_air, v_air, a_air = simulate(boks, t_air_terminal, simRes)
 
 
-# And simulate the fall for 4 seconds to reach terminal velocity
-t_air_terminal = np.linspace(0, 4, sim_res)
+# Og simuler fallet i 4 sekunder for å oppnå terminal hastighet
+t_air_terminal = np.linspace(0, 4, simRes)
 boks.reset(pos=0, vel=0, acc=g)
-_, s_air_terminal, v_air_terminal, a_air_terminal = simulate(boks, t_air_terminal, sim_res)
+_, s_air_terminal, v_air_terminal, a_air_terminal = simulate(boks, t_air_terminal, simRes)
 
 
-# And finally: simulate a bigger box that reaches terminal velocity at the fall height (6.7m)
-t_air_big_terminal = np.linspace(0, 100, sim_res)
-_, s_air_big_terminal, v_air_big_terminal, a_air_big_terminal = simulate(størreBoks, t_air_big_terminal, sim_res)
+# Og til slutt: simuler en større boks som når terminal hastighet på fallhøyden (6.7m)
+t_air_big_terminal = np.linspace(0, 2, simRes)
+_, s_air_big_terminal, v_air_big_terminal, a_air_big_terminal = simulate(størreBoks, t_air_big_terminal, simRes)
  
 
 
 
 
-#%% Find deviation between fall with air resistance and the other two
+# Finn avvik mellom fall med luftmotstand og de to andre
 
 s_measured_interp = np.interp(t_air, t_measured, s_measured)
 s_tracked_interp = np.interp(t_air, t_tracked, s_tracked)
@@ -180,24 +175,22 @@ s_measured_avg = (s_measured_interp + s_tracked_interp) / 2
 deviation_measured = s_air - s_measured_avg
 
 
-# Filter out values after 1.2s
-# since the measured data cuts off before the end of the fall and the deviation becomes large.
-deviation_list = []
-time_dev_list = []
 
 i = 0
-while t_air[i] < 1.2:
+deviation_list = []
+time_dev_list = []
+while (t := t_air[i]) < 1.2:
     deviation_list.append(deviation_measured[i])
-    time_dev_list.append(t_air[i])
-    i += 1
+    time_dev_list.append(t)
+    i+=1
 
 
 deviation_list = np.array(deviation_list)
 
 
 
+print("Standardavvik:", np.nanstd(abs(deviation_list)))
 print("Gjennomsnittlig avvik:", np.nanmean(abs(deviation_list)))
-print("Standardavvik fra avvik:", np.nanstd(abs(deviation_list)))
 print("Største avvik:", np.max(abs(deviation_list)))
 
 # plt.plot(time_dev_list, deviation_list, label="Avvik til measured")
@@ -207,35 +200,105 @@ print("Største avvik:", np.max(abs(deviation_list)))
 
 #%% Plotting
 
+DPI = 600
+imageFolder = "figures"
+
+
+#%% Plot micro:bit data
+# plt.figure("Målt av micro:bit", figsize=(12, 9))
+# plt.plot(t_measured, a_measured, label="Målt akselerasjon")
+# plt.plot(t_measured, v_measured, label="Hastighet")
+# plt.plot(t_measured, s_measured, label="Posisjon")
+# plt.title("Målt av micro:bit")
+# plt.xlabel("Tid [s]")
+# plt.ylabel("[m]    [m/s]    [m/s²]")
+# plt.ylim([-12, 1])
+# plt.legend()
+# plt.grid()
+# plt.show(block=False)
+# plt.savefig(os.path.join(imageFolder, "microbit_data.png"), dpi=DPI, bbox_inches='tight')
+
+
+# #%% Plot Tracker data
+# plt.figure("Målt i Tracker", figsize=(12, 9))
+# plt.plot(t_tracked, a_tracked, label="Akselerasjon")
+# plt.plot(t_tracked, v_tracked, label="Hastighet")
+# plt.plot(t_tracked, s_tracked, label="Målt Posisjon")
+# plt.title("Målt i Tracker")
+# plt.xlabel("Tid [s]")
+# plt.ylabel("[m]    [m/s]    [m/s²]")
+# plt.ylim([-12, 1])
+# plt.legend()
+# plt.grid()
+# plt.show(block=False)
+# plt.savefig(os.path.join(imageFolder, "tracker_data.png"), dpi=DPI, bbox_inches='tight')
+
+
+# #%% Plot Tracker data, men uten akselerasjon
+# plt.figure("Målt i Tracker uten a", figsize=(12, 9))
+# plt.plot(t_tracked, v_tracked, label="Hastighet")
+# plt.plot(t_tracked, s_tracked, label="Målt Posisjon")
+# plt.title("Målt i Tracker (uten akselerasjon)")
+# plt.xlabel("Tid [s]")
+# plt.ylabel("[m]    [m/s]")
+# plt.ylim([-12, 1])
+# plt.legend()
+# plt.grid()
+# plt.show(block=False)
+# plt.savefig(os.path.join(imageFolder, "tracker_data_no_acceleration.png"), dpi=DPI, bbox_inches='tight')
+
+
+# #%% Plot fritt fall
+# plt.figure("Fritt Fall", figsize=(12, 9))
+# plt.plot(t_free, a_free, label="Akselerasjon")
+# plt.plot(t_free, v_free, label="Hastighet")
+# plt.plot(t_free, s_free, label="Posisjon")
+# plt.title("Fritt Fall uten luftmotstand")
+# plt.xlabel("Tid [s]")
+# plt.ylabel("[m]    [m/s]    [m/s²]")
+# plt.ylim([-12, 1])
+# plt.legend()
+# plt.grid()
+# plt.show(block=False)
+# plt.savefig(os.path.join(imageFolder, "free_fall.png"), dpi=DPI, bbox_inches='tight')
+
+
+# #%% Plot luftmotstand
+# plt.figure("Luftmotstand", figsize=(12, 9))
+# plt.plot(t_air, a_air, label="Akselerasjon")
+# plt.plot(t_air, v_air, label="Hastighet")
+# plt.plot(t_air, s_air, label="Posisjon")
+# plt.title("Fall med luftmotstand")
+# plt.xlabel("Tid [s]")
+# plt.ylabel("[m]    [m/s]    [m/s²]")
+# plt.legend()
+# plt.grid()
+# plt.show(block=False)
+# plt.savefig(os.path.join(imageFolder, "air_resistance.png"), dpi=DPI, bbox_inches='tight')
 
 
 
-#%% Plot all positions
 
+#%% Plot alle posisjon
 plt.figure("Alle Posisjoner", figsize=(12, 9))
-
 plt.plot(t_free, s_free, label="Fritt Fall")
 plt.plot(t_air, s_air, label="Luftmotstand")
 plt.plot(t_tracked, s_tracked, label="Tracker: Målt s")
 plt.plot(t_measured, s_measured, label="micro:bit: Integrert a → v → s")
-
 plt.title("Alle Posisjoner")
 plt.ylabel("Posisjon [m]")
 plt.xlabel("Tid [s]")
-
 plt.legend()
 plt.grid()
 plt.show(block=False)
-
-plt.savefig(os.path.join(image_folder, "all_positions.png"), dpi=DPI, bbox_inches='tight')
-
+plt.savefig(os.path.join(imageFolder, "all_positions.png"), dpi=DPI, bbox_inches='tight')
 
 
 
 
-#%% Plot all velocities
+
+#%% Plot alle hastighet
 plt.figure("Alle Hastigheter", figsize=(12, 9))
-
 plt.plot(t_free, v_free, label="Fritt Fall")
 plt.plot(t_air, v_air, label="Luftmotstand")
 plt.plot(t_tracked, v_tracked, label="Tracker: Derivert s → v")
@@ -244,18 +307,16 @@ plt.plot(t_measured, v_measured, label="micro:bit: Integrert a → v")
 plt.title("Alle Hastigheter")
 plt.ylabel("Hastighet [m/s]")
 plt.xlabel("Tid [s]")
-
 plt.legend()
 plt.grid()
 plt.show(block=False)
-
-plt.savefig(os.path.join(image_folder, "all_velocities.png"), dpi=DPI, bbox_inches='tight')
-
+plt.savefig(os.path.join(imageFolder, "all_velocities.png"), dpi=DPI, bbox_inches='tight')
 
 
 
 
-#%% Plot terminal velocity
+
+#%% Plot terminal hastighet
 plt.figure("Nesten Terminal Hastighet", figsize=(12, 9))
 
 
@@ -265,10 +326,10 @@ ax2 = ax1.twinx()
 
 # Plot position on the first axis
 ax1.plot(t_air_terminal, s_air_terminal, label="Posisjon")
-ax1.hlines(-6.7, 0, t_air_terminal[-1], color="black", linestyle='--', label="Fallhøyde")
+ax1.hlines(s_measured[-1], 0, t_air_terminal[-1], color="blue", linestyle='--', label="Fallhøyde")
 ax1.set_ylabel("Posisjon [m]")
 ax1.set_xlabel("Tid [s]")
-ax1.set_ylim([-35, 35/14])
+ax1.set_ylim([-30, 30/12])
 ax1.legend(loc='upper left')
 ax1.grid()
 
@@ -276,23 +337,25 @@ ax1.grid()
 ax2.plot(t_air_terminal, v_air_terminal, label="Hastighet", color="green")
 ax2.plot(t_air_terminal, a_air_terminal, label="Akselerasjon", color="red")
 ax2.set_ylabel("Hastighet [m/s]      Akselerasjon [m/s²]")
-ax2.set_ylim([-14, 1])
+ax2.set_ylim([-12, 1])
 ax2.legend(loc='upper right')
+
 ax2.grid()
 
 plt.title("Boks oppnår terminal hastighet etterhvert")
 plt.xlabel("Tid [s]")
 plt.legend()
 plt.show(block=False)
-plt.savefig(os.path.join(image_folder, "terminal_velocity.png"), dpi=DPI, bbox_inches='tight')
+plt.savefig(os.path.join(imageFolder, "terminal_velocity.png"), dpi=DPI, bbox_inches='tight')
 
 
 
 
 
 
-#%% Plot bigger box terminal velocity
+#%% Plot terminal hastighet
 plt.figure("Stor Boks Terminal Hastighet", figsize=(12, 9))
+
 
 # One axis for position, one for v and a
 ax1 = plt.gca()
@@ -300,7 +363,7 @@ ax2 = ax1.twinx()
 
 # Plot position on the first axis
 ax1.plot(t_air_big_terminal, s_air_big_terminal, label="Posisjon")
-ax1.hlines(-6.7, 0, t_air_big_terminal[-1], color="black", linestyle='--', label="Fallhøyde")
+ax1.hlines(s_measured[-1], 0, t_air_big_terminal[-1], color="blue", linestyle='--', label="Fallhøyde")
 ax1.set_ylabel("Posisjon [m]")
 ax1.set_xlabel("Tid [s]")
 ax1.set_ylim([-30, 30/12])
@@ -318,49 +381,45 @@ ax2.grid()
 
 plt.title("Større areal oppnår terminal hastighet")
 plt.xlabel("Tid [s]")
-
 plt.legend()
 plt.show(block=False)
-
-plt.savefig(os.path.join(image_folder, "big_terminal_velocity.png"), dpi=DPI, bbox_inches='tight')
-
+plt.savefig(os.path.join(imageFolder, "big_terminal_velocity.png"), dpi=DPI, bbox_inches='tight')
 
 
 
 
 
-#%% Plot all acceleration
+
+#%% Plot alle akselerasjon
 plt.figure("Tracker Akselerasjon", figsize=(12, 9))
-
 plt.plot(t_tracked, a_tracked, label="Tracker: derivert s → v → a", color="green")
-
 plt.title("Akselerasjon målt i Tracker")
 plt.ylabel("Akselerasjon [m/s²]")
 plt.xlabel("Tid [s]")
-
 plt.grid()
 plt.legend()
-
 plt.show(block=False)
-plt.savefig(os.path.join(image_folder, "tracker_acceleration.png"), dpi=DPI, bbox_inches='tight')
+plt.savefig(os.path.join(imageFolder, "tracker_acceleration.png"), dpi=DPI, bbox_inches='tight')
 
 
 
 
-#%% Plot all acceleration without tracker data
+#%% Plot alle akselerasjon uten tracker data
 plt.figure("Akselerasjoner uten Tracker", figsize=(12, 9))
-
 plt.plot(t_free, a_free, label="Fritt Fall")
 plt.plot(t_air, a_air, label="Luftmotstand", color="orange")
 plt.plot(t_measured, a_measured, label="micro:bit: målt a", color="red")
-
 plt.title("Akselerasjoner uten Tracker")
 plt.ylabel("Akselerasjon [m/s²]")
 plt.xlabel("Tid [s]")
-
 plt.legend()
 plt.grid()
-
-plt.savefig(os.path.join(image_folder, "all_other_accelerations.png"), dpi=DPI, bbox_inches='tight')
+plt.show(block=False)
+plt.savefig(os.path.join(imageFolder, "all_other_accelerations.png"), dpi=DPI, bbox_inches='tight')
 
 plt.show()
+
+
+
+
+

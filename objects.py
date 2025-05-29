@@ -5,12 +5,12 @@ class FallingObject:
     
     g = -9.81  # [m/s^2]
     
-    def __init__(self, mass, area, dragCoeff, airDensity, pos, vel, acc):
+    def __init__(self, mass, area, drag_coeff, air_density, pos, vel, acc):
         self.mass = mass
         self.area = area
-        self.dragCoeff = dragCoeff
+        self.dragCoeff = drag_coeff
         
-        self.airDensity = airDensity
+        self.airDensity = air_density
         
         self.pos = pos
         self.vel = vel
@@ -20,6 +20,7 @@ class FallingObject:
     def update(self, dt):
         """Update the position, velocity and acceleration based on falling in air.
         """
+        
         v = self.vel + self.acc * dt
         
         self.vel = v
@@ -27,6 +28,8 @@ class FallingObject:
         
         dragForce = 1/2 * self.airDensity * self.dragCoeff * self.area * abs(v)*v # v^2, but keep the sign of v
         self.acc = self.g - ( dragForce / self.mass )
+        
+        
 
     def reset(self, pos=None, vel=None, acc=None):
         """Reset the position, velocity and acceleration of the object.
@@ -40,16 +43,16 @@ class FallingObject:
 
 class Ball(FallingObject):
     
-    def __init__(self, radius, mass, dragCoeff, airDensity, pos, vel, acc):
-        super().__init__(mass, np.pi*radius**2, dragCoeff, airDensity, pos, vel, acc)
+    def __init__(self, radius, mass, drag_coeff, air_density, pos, vel, acc):
+        super().__init__(mass, np.pi*radius**2, drag_coeff, air_density, pos, vel, acc)
         
         self.radius = radius
 
 
 class Cube(FallingObject):
     
-    def __init__(self, sideLen, mass, dragCoeff, airDensity, pos, vel, acc):
-        super().__init__(mass, sideLen**2, dragCoeff, airDensity, pos, vel, acc)
+    def __init__(self, sideLen, mass, drag_coeff, air_density, pos, vel, acc):
+        super().__init__(mass, sideLen**2, drag_coeff, air_density, pos, vel, acc)
         
         self.sideLen = sideLen
         

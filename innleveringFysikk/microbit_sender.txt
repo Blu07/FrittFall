@@ -1,0 +1,8 @@
+radio.set_group(4)
+input.set_accelerometer_range(AcceleratorRange.TWO_G)
+ 
+def on_forever():
+    radio.send_value("z", input.acceleration(Dimension.Z))
+    radio.send_value("str", input.acceleration(Dimension.STRENGTH))
+    radio.send_value("time", input.running_time())
+basic.forever(on_forever)

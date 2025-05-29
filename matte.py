@@ -6,7 +6,7 @@ from pprint import pprint
 import numpy as np
 from scipy.optimize import curve_fit
 
-from integrate import integrate
+from utils import integrate
 
 url = "https://data.ssb.no/api/v0/no/table/03501/"
 jsonQuery = {
@@ -254,7 +254,7 @@ balsfjordSineDerived = np.gradient(balsfjordSineFitted, high_res_years)
 # Manually remove some values before fitting. (These values are outliers and affect the fit significantly)
 # The indexes to remove are based on visual inspection of the data
 # The values will still be plotted, but not used in the fitting process
-indexes_to_remove = [] #10, 19, 20]
+indexes_to_remove = [10, 19, 20]
 filtered_skien = np.delete(skien.copy(), indexes_to_remove)
 filtered_years = np.delete(yearAfter1987.copy(), indexes_to_remove)
 
@@ -280,20 +280,34 @@ skienSineDerived = np.gradient(skienSineFitted, high_res_years)
 
 
 
-# Plot Skien and Balsfjord data with fitted functions
-fig1 = plt.figure("Balsfjord and Skien Elk deceased since 1987")
-fig1.gca().plot(yearAfter1987, balsfjord, label="Balsfjord Data")
+figsize = (12, 9)
+
+
+# Plot Skien data with fitted functions
+fig1 = plt.figure("Balsfjord Elk deceased since 1987", figsize=figsize)
+
+fig1.gca().plot(yearAfter1987, balsfjord, label="Balsfjord Data", color="#1f77b4")
 fig1.gca().plot(high_res_years, balsfjordPolyFitted, label="Fitted Poly Function", linestyle="--", color="green")
 fig1.gca().plot(high_res_years, balsfjordSineFitted, label="Fitted Sine Function", linestyle="--", color="orange")
 
-fig1.gca().plot(yearAfter1987, skien, label="Skien Data")
-fig1.gca().plot(high_res_years, fitted_poly_skien, label="Skien Poly Fit", linestyle="--", color="green")
-fig1.gca().plot(high_res_years, skienSineFitted, label="Skien Sine Fit", linestyle="--", color="orange")
 
-fig1.gca().set_xlabel("Years after 1987")
-fig1.gca().set_ylabel("Number of Elk deceased per year")
 fig1.gca().set_title("Elk Data with Fitted Lines")
+fig1.gca().set_xlabel("Years after 1987")
+fig1.gca().set_ylabel("Number of Elk deceased in Balsfjord per year")
 fig1.gca().legend()
+
+
+# Plot Balsfjord data with fitted functions
+fig2 = plt.figure("Skien Elk deceased since 1987", figsize=figsize)
+
+fig2.gca().plot(yearAfter1987, skien, label="Skien Data", color="#1f77b4", marker='o', markersize=3)
+fig2.gca().plot(high_res_years, fitted_poly_skien, label="Fitted Poly Function", linestyle="--", color="green")
+fig2.gca().plot(high_res_years, skienSineFitted, label="Fitted Sine Function", linestyle="--", color="orange")
+
+fig2.gca().set_ylabel("Number of Elk deceased in Skien per year")
+fig2.gca().set_title("Elk Data with Fitted Lines")
+fig2.gca().set_xlabel("Years after 1987")
+fig2.gca().legend()
 
 
 
@@ -301,52 +315,55 @@ fig1.gca().legend()
 #%% Integrated and Summed Data
 
 # Balsfjord
-fig2 = plt.figure("Balsfjord Integrated and Summed Data")
-fig2.gca().plot(yearAfter1987, balsfjordSum, label="Balsfjord Summed", linestyle="-")
-fig2.gca().plot(high_res_years, balsfjordPolyIntegrated, label="Balsfjord Poly Integrated", linestyle='--', color='red')
-fig2.gca().plot(high_res_years, balsfjordSineIntegrated, label="Balsfjord Sine Integrated", linestyle='--', color='yellow')
+fig3 = plt.figure("Balsfjord Integrated and Summed Data", figsize=figsize)
+fig3.gca().plot(yearAfter1987, balsfjordSum, label="Data Summed", linestyle="-")
+fig3.gca().plot(high_res_years, balsfjordPolyIntegrated, label="Poly Fit Integrated", linestyle='--', color='green')
+fig3.gca().plot(high_res_years, balsfjordSineIntegrated, label="Sine Fit Integrated", linestyle='--', color='orange')
 
-fig2.gca().set_xlabel("Years after 1987")
-fig2.gca().set_ylabel("Total number of Elk deceased since 1987")
-fig2.gca().set_title("Integrated Balsfjord Elk Data")
-fig2.gca().legend()
+fig3.gca().set_title("Integrated Balsfjord Elk Data")
+fig3.gca().set_xlabel("Years after 1987")
+fig3.gca().set_ylabel("Total number of Elk deceased since 1987")
+fig3.gca().legend()
+
 
 
 # Skien
-fig3 = plt.figure("Skien Integrated and Summed Data")
-fig3.gca().plot(yearAfter1987, skienSum, label="Skien Summed", linestyle="-")
-fig3.gca().plot(high_res_years, skienPolyIntegrated, label="Skien Poly Integrated", linestyle='--', color='green')
-fig3.gca().plot(high_res_years, skienSineIntegrated, label="Skien Sine Integrated", linestyle='--', color='orange')
+fig4 = plt.figure("Skien Integrated and Summed Data", figsize=figsize)
+fig4.gca().plot(yearAfter1987, skienSum, label="Data Summed", linestyle="-")
+fig4.gca().plot(high_res_years, skienPolyIntegrated, label="Poly Fit Integrated", linestyle='--', color='green')
+fig4.gca().plot(high_res_years, skienSineIntegrated, label="Sine Fit Integrated", linestyle='--', color='orange')
 
-fig3.gca().set_xlabel("Years after 1987")
-fig3.gca().set_ylabel("Total number of Elk deceased since 1987")
-fig3.gca().set_title("Integrated Balsfjord Elk Data")
-fig3.gca().legend()
+fig4.gca().set_title("Integrated Skien Elk Data")
+fig4.gca().set_xlabel("Years after 1987")
+fig4.gca().set_ylabel("Total number of Elk deceased since 1987")
+fig4.gca().legend()
+
+
 
 
 
 #%% Derived Data
 
-fig4 = plt.figure("Skien and Balsfjord Derived Data")
+fig5 = plt.figure("Skien Derived Data", figsize=figsize)
 
-fig4.gca().plot(high_res_years, skienSineDerived, label="Skien Derived")
-fig4.gca().plot(high_res_years, skienPolyDerived, label="Skien Derived")
+fig5.gca().plot(high_res_years, skienSineDerived, label="Sine Fit Derived", color="orange")
+fig5.gca().plot(high_res_years, skienPolyDerived, label="Poly Fit Derived", color="green")
 
-fig4.gca().set_xlabel("Years after 1987")
-fig4.gca().set_ylabel("Rate of change of Elk deceased")
-fig4.gca().set_title("Derived Balsfjord Elk Data")
-fig4.gca().legend()
-
-
-fig5= plt.figure("Skien and Balsfjord Derived Data")
-
-fig5.gca().plot(high_res_years, balsfjordSineDerived, label="Balsfjord Sine Derived", color='orange')
-fig5.gca().plot(high_res_years, balsfjordPolyDerived, label="Balsfjord Poly Derived", color='green')
-
+fig5.gca().set_title("Derived Skien Elk Data")
 fig5.gca().set_xlabel("Years after 1987")
 fig5.gca().set_ylabel("Rate of change of Elk deceased")
-fig5.gca().set_title("Derived Balsfjord Elk Data")
 fig5.gca().legend()
+
+
+fig6 = plt.figure("Balsfjord Derived Data", figsize=figsize)
+
+fig6.gca().plot(high_res_years, balsfjordSineDerived, label="Sine Fit Derived", color='orange')
+fig6.gca().plot(high_res_years, balsfjordPolyDerived, label="Poly Fit Derived", color='green')
+
+fig6.gca().set_title("Derived Balsfjord Elk Data")
+fig6.gca().set_xlabel("Years after 1987")
+fig6.gca().set_ylabel("Rate of change of Elk deceased")
+fig6.gca().legend()
 
 
 
@@ -355,12 +372,13 @@ fig5.gca().legend()
 # Savefig calls at the end
 # Toggle True/False to save figures
 if True:
-	DPI = 1200
-	fig1.savefig("matteFigures/data_with_fit.png", dpi=DPI, bbox_inches='tight')
-	
-	fig2.savefig("matteFigures/balsfjord-integrated.png", dpi=DPI, bbox_inches='tight')
-	fig3.savefig("matteFigures/skien-integrated.png", dpi=DPI, bbox_inches='tight')
-	
-	fig4.savefig("matteFigures/balsfjord-derived.png", dpi=DPI, bbox_inches='tight')
-	fig5.savefig("matteFigures/skien-derived.png", dpi=DPI, bbox_inches='tight')
+  DPI = 1200
+  fig1.savefig("matteFigures/balsfjord-data.png", dpi=DPI, bbox_inches='tight')
+  fig2.savefig("matteFigures/skien-data.png", dpi=DPI, bbox_inches='tight')
+
+  fig3.savefig("matteFigures/balsfjord-integrated.png", dpi=DPI, bbox_inches='tight')
+  fig4.savefig("matteFigures/skien-integrated.png", dpi=DPI, bbox_inches='tight')
+
+  fig5.savefig("matteFigures/skien-derived.png", dpi=DPI, bbox_inches='tight')
+  fig6.savefig("matteFigures/balsfjord-derived.png", dpi=DPI, bbox_inches='tight')
 
